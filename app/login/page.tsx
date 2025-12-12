@@ -21,9 +21,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect } from "@/utils/isuserlogin";
 
 function Page() {
   const router = useRouter();
+
+  useAuthRedirect();
+
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -43,9 +47,18 @@ function Page() {
       });
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data.message || "Login successful");
-      router.push("/dashboard");
+      try {
+        const res = await axios.get(`${baseUrl}/api/auth/me`, {
+          withCredentials: true,
+        });
+        const user = res.data.user;
+        console.log("Logged in user:", user);
+        router.push(`/dashboard/${user.id}`);
+      } catch (e) {
+        router.push("/");
+      }
     },
     onError: (data) => {
       toast.error(data?.message || "Login failed. Please try again.");
