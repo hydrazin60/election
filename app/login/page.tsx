@@ -20,15 +20,14 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useAuthRedirect } from "@/utils/isuserlogin";
+
+import { useAuthRedirectQuery } from "@/utils/isuserlogin";
 
 function Page() {
-  const router = useRouter();
-
-  useAuthRedirect();
+  const { isLoading } = useAuthRedirectQuery();
 
   const [showPassword, setShowPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -49,16 +48,7 @@ function Page() {
     },
     onSuccess: async (data) => {
       toast.success(data.message || "Login successful");
-      try {
-        const res = await axios.get(`${baseUrl}/api/auth/me`, {
-          withCredentials: true,
-        });
-        const user = res.data.user;
-        console.log("Logged in user:", user);
-        router.push(`/dashboard/${user.id}`);
-      } catch (e) {
-        router.push("/");
-      }
+      window.location.href = `/dashboard/${data.user.id}`;
     },
     onError: (data) => {
       toast.error(data?.message || "Login failed. Please try again.");
@@ -67,7 +57,7 @@ function Page() {
   const onSubmit = (data: SignInFormData) => {
     loginMutation.mutate(data);
   };
-
+  if (isLoading) return <div>Loading...</div>;
   return (
     <section className=" min-h-screen flex items-center justify-center min-w-screen ">
       <Card className="w-full max-w-md ">
