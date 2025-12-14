@@ -1,7 +1,7 @@
 // nepalData.ts
 
 export const provinces: string[] = [
-  "प्रदेश १",
+  "कोशी",
   "प्रदेश २",
   "बागमती प्रदेश",
   "गण्डकी प्रदेश",
@@ -11,7 +11,7 @@ export const provinces: string[] = [
 ];
 
 export const districts: Record<string, string[]> = {
-  "प्रदेश १": [
+  कोशी: [
     "झापा",
     "मोरङ",
     "सप्तरी",
@@ -82,7 +82,7 @@ export const municipalities: Record<string, string[]> = {
     "त्रियुगा नगरपालिका",
     "कटारी नगरपालिका",
     "चौदण्डीगढी नगरपालिका",
-    "बेलका नगरपालिका",
+    "वेलका नगरपालिका",
     "उदयपुरगढी गाउँपालिका",
     "रौतामाई गाउँपालिका",
     "ताप्ली गाउँपालिका",
@@ -100,20 +100,20 @@ export const municipalities: Record<string, string[]> = {
   // Add other districts as needed
 };
 export const wards: string[] = [
-  "वडा १",
-  "वडा २",
-  "वडा ३",
-  "वडा ४",
-  "वडा ५",
-  "वडा ६",
-  "वडा ७",
-  "वडा ८",
-  "वडा ९",
-  "वडा १०",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "1०",
 ];
 
 export const pollingCenters: string[] = [
-  "मतदान केन्द्र १",
+  "वरपिपल मा.वि., कमलाबारी",
   "मतदान केन्द्र २",
   "मतदान केन्द्र ३",
   "मतदान केन्द्र ४",

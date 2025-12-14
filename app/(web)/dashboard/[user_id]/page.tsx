@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,7 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
-import LocationFilterCard from "@/components/dashbord/location-filter-card";
+import LocationFilterCard, {
+  LocationFilters,
+} from "@/components/dashbord/location-filter-card";
 import VoterDataTable from "@/components/dashbord/output-data-table";
 import { Voter, VoterResponse } from "@/type/voter.type";
 import { useQuery } from "@tanstack/react-query";
@@ -74,17 +76,33 @@ const fetchVoterById = async (voterId: string): Promise<VoterResponse> => {
   }
 };
 
-const fetchAllVoters = async (
+export const fetchAllVoters = async (
+  page: number,
+  limit: number
+): Promise<VoterResponse> => {
+  const { data } = await axios.get("/api/election", {
+    params: {
+      page,
+      limit,
+    },
+  });
+
+  return data;
+};
+const fetchVotersByLocation = async (
+  locationFilters: LocationFilters,
   page: number,
   limit: number
 ): Promise<VoterResponse> => {
   try {
-    const { data } = await axios.get("/api/election", {
-      params: { page, limit },
+    const { data } = await axios.post("/api/election", {
+      ...locationFilters,
+      page,
+      limit,
     });
     return data;
   } catch (error) {
-    console.error("Error fetching all voters:", error);
+    console.error("Error fetching voters by location:", error);
     return {
       success: false,
       data: [],
@@ -104,18 +122,43 @@ export default function Page() {
   const [searchMode, setSearchMode] = useState<"all" | "single">("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<10 | 50 | 100 | "all">(10);
+  const [locationFilters, setLocationFilters] = useState<LocationFilters>({
+    province: "",
+    district: "",
+    municipality: "",
+    wardNumber: "",
+    pollingCenter: "",
+  });
+  const [isLocationFilterActive, setIsLocationFilterActive] = useState(false);
 
+  // Single voter query
   const singleVoterQuery = useQuery({
     queryKey: ["voter", voterId],
     queryFn: () => fetchVoterById(voterId),
-    enabled: searchMode === "single" && voterId.length > 0,
+    enabled: false,
     retry: 1,
   });
 
+  // All voters query
   const allVotersQuery = useQuery({
     queryKey: ["voters", page, limit],
     queryFn: () => fetchAllVoters(page, limit === "all" ? 1000 : limit),
-    enabled: searchMode === "all",
+    enabled: false,
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  });
+
+  // Location-based voters query
+  const locationVotersQuery = useQuery({
+    queryKey: ["voters-by-location", locationFilters, page, limit],
+    queryFn: () =>
+      fetchVotersByLocation(
+        locationFilters,
+        page,
+        limit === "all" ? 1000 : limit
+      ),
+    enabled: isLocationFilterActive,
     placeholderData: (previousData) => previousData,
     staleTime: 1000 * 60 * 5,
     retry: 1,
@@ -125,8 +168,10 @@ export default function Page() {
     if (voterId.trim()) {
       setSearchMode("single");
       setPage(1);
+      setIsLocationFilterActive(false);
     } else {
       setSearchMode("all");
+      setIsLocationFilterActive(false);
     }
   };
 
@@ -134,6 +179,14 @@ export default function Page() {
     setVoterId("");
     setSearchMode("all");
     setPage(1);
+    setIsLocationFilterActive(false);
+    setLocationFilters({
+      province: "",
+      district: "",
+      municipality: "",
+      wardNumber: "",
+      pollingCenter: "",
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -142,28 +195,64 @@ export default function Page() {
     }
   };
 
+  // Handle location filter changes
+  const handleLocationFilterChange = (filters: LocationFilters) => {
+    setLocationFilters(filters);
+    // Check if all required filters are filled
+    const hasAllFilters =
+      !!filters.province &&
+      !!filters.district &&
+      !!filters.municipality &&
+      !!filters.wardNumber &&
+      !!filters.pollingCenter;
+
+    setIsLocationFilterActive(hasAllFilters);
+
+    // If location filters are cleared and we're in single mode, don't change
+    // If we were showing location results and filters are cleared, switch to all
+    if (!hasAllFilters && isLocationFilterActive) {
+      setSearchMode("all");
+    }
+  };
+
+  // Handle apply location filters
+  const handleApplyLocationFilters = (filters: LocationFilters) => {
+    setLocationFilters(filters);
+    setSearchMode("all"); // Keep as "all" but use location filter
+    setPage(1);
+    setVoterId("");
+    setIsLocationFilterActive(true);
+  };
+
+  // Determine which query to use based on search mode and location filter
   let voters: Voter[] = [];
   let isLoading = false;
   let isError = false;
   let totalVoters = 0;
+  let pagination = undefined;
 
   if (searchMode === "single") {
     voters = singleVoterQuery.data?.data || [];
     isLoading = singleVoterQuery.isLoading;
     isError = singleVoterQuery.isError;
     totalVoters = voters.length;
+  } else if (isLocationFilterActive) {
+    // Location-based filtering
+    voters = locationVotersQuery.data?.data || [];
+    isLoading = locationVotersQuery.isLoading;
+    isError = locationVotersQuery.isError;
+    totalVoters = locationVotersQuery.data?.pagination?.total || voters.length;
+    pagination = locationVotersQuery.data?.pagination;
   } else {
+    // All voters (default)
     voters = allVotersQuery.data?.data || [];
     isLoading = allVotersQuery.isLoading;
     isError = allVotersQuery.isError;
     totalVoters = allVotersQuery.data?.pagination?.total || voters.length;
+    pagination = allVotersQuery.data?.pagination;
   }
 
   const safeVoters = Array.isArray(voters) ? voters : [];
-  useEffect(() => {
-    if (searchMode === "all") {
-    }
-  }, [searchMode]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -189,6 +278,7 @@ export default function Page() {
                       value={voterId}
                       onChange={(e) => setVoterId(e.target.value)}
                       onKeyDown={handleKeyPress}
+                      disabled={isLocationFilterActive}
                     />
                     {voterId && (
                       <button
@@ -205,11 +295,13 @@ export default function Page() {
                   <Button
                     className="py-4 px-6 bg-blue-600 hover:bg-blue-700 rounded-lg"
                     onClick={handleSearch}
-                    disabled={singleVoterQuery.isLoading}
+                    disabled={
+                      singleVoterQuery.isLoading || isLocationFilterActive
+                    }
                   >
                     <Search className="mr-2 h-4 w-4" /> Search
                   </Button>
-                  {searchMode === "single" && (
+                  {(searchMode === "single" || isLocationFilterActive) && (
                     <Button
                       variant="outline"
                       className="border border-red-600"
@@ -225,9 +317,20 @@ export default function Page() {
             <CardContent className="space-y-3">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  {searchMode === "all" && (
+                  {!isLocationFilterActive && searchMode === "all" && (
                     <span className="text-sm text-gray-500">
                       {totalVoters.toLocaleString()} total voters
+                    </span>
+                  )}
+                  {isLocationFilterActive && (
+                    <span className="text-sm text-gray-500">
+                      {totalVoters.toLocaleString()} voters found with location
+                      filters
+                    </span>
+                  )}
+                  {searchMode === "single" && (
+                    <span className="text-sm text-gray-500">
+                      {totalVoters} voter found
                     </span>
                   )}
                 </div>
@@ -242,7 +345,7 @@ export default function Page() {
                     limit={limit}
                     onPageChange={setPage}
                     onLimitChange={setLimit}
-                    pagination={allVotersQuery.data?.pagination}
+                    pagination={pagination}
                     totalVoters={totalVoters}
                   />
                 </div>
@@ -251,7 +354,11 @@ export default function Page() {
           </Card>
         </div>
         <div className="lg:col-span-1">
-          <LocationFilterCard />
+          <LocationFilterCard
+            onFilterChange={handleLocationFilterChange}
+            onApplyFilters={handleApplyLocationFilters}
+            isLoading={isLocationFilterActive && locationVotersQuery.isLoading}
+          />
         </div>
       </div>
     </div>

@@ -46,8 +46,6 @@ export default function VoterDataTable({
   const [expandedVoter, setExpandedVoter] = useState<number | null>(null);
 
   if (isLoading) return <p className="p-4 text-center">Loading...</p>;
-  if (isError)
-    return <p className="p-4 text-center text-red-500">Error loading data</p>;
 
   const safeVoters = Array.isArray(voters) ? voters : [];
 

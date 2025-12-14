@@ -19,6 +19,7 @@ export const useAuthRedirectQuery = () => {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const userId = query.data?.user?.id ?? null;
   useEffect(() => {
     if (query.isSuccess && query.data?.user?.id) {
       router.push(`/dashboard/${query.data.user.id}`);
@@ -29,5 +30,8 @@ export const useAuthRedirectQuery = () => {
     }
   }, [query.isSuccess, query.isError, query.data, router]);
 
-  return query;
+  return {
+    ...query,
+    userId,
+  };
 };

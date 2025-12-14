@@ -16,8 +16,11 @@ import {
 
 import { Users, UserPlus, Search } from "lucide-react";
 import Link from "next/link";
+import { useAuthRedirectQuery } from "@/utils/isuserlogin";
 
 const AppSidebar = () => {
+  const { userId, isLoading } = useAuthRedirectQuery();
+  if (isLoading) return null;
   return (
     <Sidebar>
       <SidebarHeader className="pt-6">
@@ -46,21 +49,21 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton>
               <Search className="mr-2 h-4 w-4" />
-              Search Voter
+              <Link href={`/dashboard/${userId}`}> Search Voter</Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add User
+              <Link href={"/register"}>Register Employ</Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton>
               <Users className="mr-2 h-4 w-4" />
-              Employee Management
+              <Link href={"/employManagment"}> Employee Management </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
