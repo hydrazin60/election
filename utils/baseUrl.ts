@@ -1,1 +1,1 @@
-export const baseUrl = "http://localhost:3000"; // this the the base uril;
+export const baseUrl = "https://election-brown-omega.vercel.app";
