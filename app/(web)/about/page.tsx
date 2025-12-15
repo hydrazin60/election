@@ -1,10 +1,10 @@
-import HeroSection from "@/components/global/hero-section";
+import AboutSection from "@/components/global/about-section";
 import React from "react";
 
 function page() {
   return (
     <div>
-      <HeroSection />
+      <AboutSection />
     </div>
   );
 }

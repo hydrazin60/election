@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
+import Image from "next/image";
 
 const Navbar = () => {
   return (
@@ -19,7 +20,7 @@ const Navbar = () => {
       <div className="flex items-center h-full w-full">
         <div className="flex-shrink-0">
           <Link href="/" className="font-bold text-lg whitespace-nowrap pl-4">
-            Logo
+            <Image src={"/logo.png"} height={60} width={60} alt="logo" />
           </Link>
         </div>
 

@@ -1,10 +1,10 @@
-import HeroSection from "@/components/global/hero-section";
+import ContactSection from "@/components/global/contact-section";
 import React from "react";
 
 function page() {
   return (
     <div>
-      <HeroSection />
+      <ContactSection />
     </div>
   );
 }

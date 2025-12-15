@@ -309,10 +309,14 @@ function LocationFilterCard({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Polling Center" />
             </SelectTrigger>
-            <SelectContent>
-              {pollingCenters.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p}
+            <SelectContent className="max-h-[300px]">
+              {/* Show polling centers only if a district is selected */}
+              {(selectedDistrict
+                ? pollingCenters[selectedDistrict] || []
+                : []
+              ).map((center) => (
+                <SelectItem key={center} value={center}>
+                  {center}
                 </SelectItem>
               ))}
             </SelectContent>

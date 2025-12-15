@@ -15,107 +15,10 @@ import LocationFilterCard, {
   LocationFilters,
 } from "@/components/dashbord/location-filter-card";
 import VoterDataTable from "@/components/dashbord/output-data-table";
-import { Voter, VoterResponse } from "@/type/voter.type";
+import { Voter } from "@/type/voter.type";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 
-const fetchVoterById = async (voterId: string): Promise<VoterResponse> => {
-  try {
-    const { data } = await axios.get(`/api/election/${voterId}`);
-    console.log("API Response for voter ID:", voterId, data);
-
-    if (data.success) {
-      if (Array.isArray(data.data)) {
-        return data;
-      } else if (data.data && typeof data.data === "object") {
-        return {
-          ...data,
-          data: [data.data],
-        };
-      }
-    }
-
-    if (data && typeof data === "object" && "voter_id" in data) {
-      return {
-        success: true,
-        data: [data],
-        pagination: {
-          page: 1,
-          limit: 1,
-          total: 1,
-          hasMore: false,
-          totalPages: 1,
-        },
-      };
-    }
-
-    return {
-      success: false,
-      data: [],
-      pagination: {
-        page: 1,
-        limit: 0,
-        total: 0,
-        hasMore: false,
-        totalPages: 0,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching voter:", error);
-    return {
-      success: false,
-      data: [],
-      pagination: {
-        page: 1,
-        limit: 0,
-        total: 0,
-        hasMore: false,
-        totalPages: 0,
-      },
-    };
-  }
-};
-
-export const fetchAllVoters = async (
-  page: number,
-  limit: number
-): Promise<VoterResponse> => {
-  const { data } = await axios.get("/api/election", {
-    params: {
-      page,
-      limit,
-    },
-  });
-
-  return data;
-};
-const fetchVotersByLocation = async (
-  locationFilters: LocationFilters,
-  page: number,
-  limit: number
-): Promise<VoterResponse> => {
-  try {
-    const { data } = await axios.post("/api/election", {
-      ...locationFilters,
-      page,
-      limit,
-    });
-    return data;
-  } catch (error) {
-    console.error("Error fetching voters by location:", error);
-    return {
-      success: false,
-      data: [],
-      pagination: {
-        page: 1,
-        limit: 0,
-        total: 0,
-        hasMore: false,
-        totalPages: 0,
-      },
-    };
-  }
-};
+import { fetchVoterById, fetchVotersByLocation } from "@/axios/endpoint";
 
 export default function Page() {
   const [voterId, setVoterId] = useState("");
@@ -131,7 +34,6 @@ export default function Page() {
   });
   const [isLocationFilterActive, setIsLocationFilterActive] = useState(false);
 
-  // Single voter query
   const singleVoterQuery = useQuery({
     queryKey: ["voter", voterId],
     queryFn: () => fetchVoterById(voterId),
@@ -139,17 +41,6 @@ export default function Page() {
     retry: 1,
   });
 
-  // All voters query
-  const allVotersQuery = useQuery({
-    queryKey: ["voters", page, limit],
-    queryFn: () => fetchAllVoters(page, limit === "all" ? 1000 : limit),
-    enabled: false,
-    placeholderData: (previousData) => previousData,
-    staleTime: 1000 * 60 * 5,
-    retry: 1,
-  });
-
-  // Location-based voters query
   const locationVotersQuery = useQuery({
     queryKey: ["voters-by-location", locationFilters, page, limit],
     queryFn: () =>
@@ -169,12 +60,12 @@ export default function Page() {
       setSearchMode("single");
       setPage(1);
       setIsLocationFilterActive(false);
+      singleVoterQuery.refetch();
     } else {
       setSearchMode("all");
       setIsLocationFilterActive(false);
     }
   };
-
   const handleReset = () => {
     setVoterId("");
     setSearchMode("all");
@@ -195,10 +86,8 @@ export default function Page() {
     }
   };
 
-  // Handle location filter changes
   const handleLocationFilterChange = (filters: LocationFilters) => {
     setLocationFilters(filters);
-    // Check if all required filters are filled
     const hasAllFilters =
       !!filters.province &&
       !!filters.district &&
@@ -207,24 +96,19 @@ export default function Page() {
       !!filters.pollingCenter;
 
     setIsLocationFilterActive(hasAllFilters);
-
-    // If location filters are cleared and we're in single mode, don't change
-    // If we were showing location results and filters are cleared, switch to all
     if (!hasAllFilters && isLocationFilterActive) {
       setSearchMode("all");
     }
   };
 
-  // Handle apply location filters
   const handleApplyLocationFilters = (filters: LocationFilters) => {
     setLocationFilters(filters);
-    setSearchMode("all"); // Keep as "all" but use location filter
+    setSearchMode("all");
     setPage(1);
     setVoterId("");
     setIsLocationFilterActive(true);
   };
 
-  // Determine which query to use based on search mode and location filter
   let voters: Voter[] = [];
   let isLoading = false;
   let isError = false;
@@ -237,23 +121,14 @@ export default function Page() {
     isError = singleVoterQuery.isError;
     totalVoters = voters.length;
   } else if (isLocationFilterActive) {
-    // Location-based filtering
     voters = locationVotersQuery.data?.data || [];
     isLoading = locationVotersQuery.isLoading;
     isError = locationVotersQuery.isError;
     totalVoters = locationVotersQuery.data?.pagination?.total || voters.length;
     pagination = locationVotersQuery.data?.pagination;
-  } else {
-    // All voters (default)
-    voters = allVotersQuery.data?.data || [];
-    isLoading = allVotersQuery.isLoading;
-    isError = allVotersQuery.isError;
-    totalVoters = allVotersQuery.data?.pagination?.total || voters.length;
-    pagination = allVotersQuery.data?.pagination;
   }
 
   const safeVoters = Array.isArray(voters) ? voters : [];
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

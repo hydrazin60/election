@@ -1,6 +1,7 @@
 "use client";
 
 import AppSidebar from "@/components/global/Appsidebar";
+import Navbar from "@/components/global/Nabvar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import React from "react";
 
@@ -10,16 +11,18 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
+    <>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar />
 
-        <main className="flex-1 p-4">
-          <SidebarTrigger />
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
+          <main className="flex-1 p-4">
+            <SidebarTrigger />
+            {children}
+          </main>
+        </div>
+      </SidebarProvider>
+    </>
   );
 };
 

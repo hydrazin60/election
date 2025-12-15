@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import z from "zod";
 import React from "react";
 
@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { registerRequestSchema } from "@/lib/validation/auth.validation";
 import {
   districts,
   municipalities,
@@ -42,7 +41,6 @@ import {
   wards,
 } from "@/data/static_data/location";
 
-// Create a type that makes role required
 type RegisterFormValues = {
   full_name: string;
   email?: string;
@@ -58,7 +56,6 @@ type RegisterFormValues = {
   };
 };
 
-// API call
 const registerUser = async (data: RegisterFormValues) => {
   const response = await axios.post("/api/auth/register", data);
   return response.data;
@@ -81,7 +78,6 @@ export default function RegisterPage() {
       role: "employ",
     },
   });
-
   const { mutate, isPending } = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
@@ -93,10 +89,11 @@ export default function RegisterPage() {
       setSelectedWard("");
       setSelectedPolling("");
     },
-    onError: (err: Error) => {
+    onError: (err: unknown) => {
+      const axiosError = err as AxiosError<{ message: string }>;
       const errorMessage =
-        (err as any)?.response?.data?.message ||
-        err?.message ||
+        axiosError?.response?.data?.message ||
+        (err as Error).message ||
         "Registration failed";
       toast.error(errorMessage);
       console.error("Registration error:", err);
@@ -104,7 +101,7 @@ export default function RegisterPage() {
   });
 
   const onSubmit = (values: RegisterFormValues) => {
-    const locationData: any = {};
+    const locationData: RegisterFormValues["location"] = {};
 
     if (selectedProvince) locationData.province = selectedProvince;
     if (selectedDistrict) locationData.district = selectedDistrict;
@@ -112,8 +109,7 @@ export default function RegisterPage() {
     if (selectedWard) locationData.wardNumber = selectedWard;
     if (selectedPolling) locationData.pollingCenter = selectedPolling;
 
-    // Only include location if any field is selected
-    const submitData = {
+    const submitData: RegisterFormValues = {
       ...values,
       ...(Object.keys(locationData).length > 0 && { location: locationData }),
     };
@@ -121,7 +117,6 @@ export default function RegisterPage() {
     mutate(submitData);
   };
 
-  // Handle province change
   const handleProvinceChange = (value: string) => {
     setSelectedProvince(value);
     setSelectedDistrict("");
@@ -129,33 +124,23 @@ export default function RegisterPage() {
     setSelectedWard("");
     setSelectedPolling("");
   };
-
-  // Handle district change
   const handleDistrictChange = (value: string) => {
     setSelectedDistrict(value);
     setSelectedMunicipality("");
     setSelectedWard("");
     setSelectedPolling("");
   };
-
-  // Handle municipality change
   const handleMunicipalityChange = (value: string) => {
     setSelectedMunicipality(value);
     setSelectedWard("");
     setSelectedPolling("");
   };
-
-  // Handle ward change
   const handleWardChange = (value: string) => {
     setSelectedWard(value);
   };
-
-  // Handle polling center change
   const handlePollingChange = (value: string) => {
     setSelectedPolling(value);
   };
-
-  // Clear all location selections
   const clearLocation = () => {
     setSelectedProvince("");
     setSelectedDistrict("");
@@ -185,11 +170,9 @@ export default function RegisterPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Full Name */}
                   <FormField
                     control={form.control}
                     name="full_name"
@@ -203,8 +186,6 @@ export default function RegisterPage() {
                       </FormItem>
                     )}
                   />
-
-                  {/* Email */}
                   <FormField
                     control={form.control}
                     name="email"
@@ -289,8 +270,6 @@ export default function RegisterPage() {
                   />
                 </div>
               </div>
-
-              {/* Location Information - Same as LocationFilterCard */}
               <div className="space-y-4 border-t pt-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
@@ -413,10 +392,13 @@ export default function RegisterPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select Polling Center" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {pollingCenters.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
+                      <SelectContent className="max-h-[300px]">
+                        {(selectedDistrict
+                          ? pollingCenters[selectedDistrict] || []
+                          : []
+                        ).map((center) => (
+                          <SelectItem key={center} value={center}>
+                            {center}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -424,7 +406,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Selected Location Badges */}
                 {hasLocation && (
                   <div className="pt-4 border-t">
                     <h4 className="text-sm font-medium mb-2">
@@ -460,11 +441,9 @@ export default function RegisterPage() {
                   </div>
                 )}
               </div>
-
-              {/* Form Notes */}
               <div className="text-sm text-gray-500 space-y-1">
                 <p>* Required fields</p>
-                <p>
+                <p className="text-red-600">
                   Note: Either email or phone must be provided (at least one)
                 </p>
                 <p>Location information is optional</p>
