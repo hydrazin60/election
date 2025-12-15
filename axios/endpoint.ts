@@ -9,7 +9,7 @@ export const fetchVoterById = async (
 ): Promise<VoterResponse> => {
   try {
     const { data } = await axios.get(`/api/election/${voterId}`);
-    console.log("API Response for voter ID:", voterId, data);
+
     if (data.success) {
       if (Array.isArray(data.data)) {
         return data;

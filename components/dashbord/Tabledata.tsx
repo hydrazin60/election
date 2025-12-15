@@ -18,7 +18,6 @@ interface Props {
 }
 
 function Tabledata({ voters, expandedVoter, onExpand }: Props) {
-  console.log(" indivusial data :", voters);
   return (
     <div className="overflow-y-auto max-h-[500px] border rounded-md">
       <Table>

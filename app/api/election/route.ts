@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       page = 1,
       limit = 10,
     } = body;
-    console.log(" Filter body :", body);
+
     if (
       !province ||
       !district ||
