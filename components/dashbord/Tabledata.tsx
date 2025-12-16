@@ -45,7 +45,7 @@ const MobileView: React.FC<MobileViewProps> = ({
   expandedVoter,
   onExpand,
 }) => (
-  <div className="block md:hidden space-y-3">
+  <div className="block md:hidden space-y-3 max-h-[550Px] overflow-y-scroll">
     {voters.length === 0 ? (
       <Card>
         <CardContent className="py-8 text-center">No voters found</CardContent>
@@ -105,7 +105,6 @@ const MobileView: React.FC<MobileViewProps> = ({
 );
 
 function Tabledata({ voters, expandedVoter, onExpand }: Props) {
-  // Find the currently expanded voter details
   const expandedVoterData = expandedVoter
     ? voters.find((voter) => voter.voter_id === expandedVoter)
     : null;
@@ -181,7 +180,7 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
           </DialogHeader>
 
           {expandedVoterData && (
-            <div className="space-y-6 pt-2">
+            <div className="space-y-0 pt-2">
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -220,7 +219,7 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
 
               {(expandedVoterData.spouse_name ||
                 expandedVoterData.parent_name) && (
-                <div className="space-y-3 pt-4 border-t">
+                <div className="space-y-3 pt-2 border-t">
                   <h4 className="font-medium flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Family Information
@@ -247,12 +246,12 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
               )}
 
               {expandedVoterData.location && (
-                <div className="space-y-3 pt-4 border-t">
+                <div className="space-y-3 pt-3 border-t">
                   <h4 className="font-medium flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     Location Information
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {expandedVoterData.location.province && (
                       <div className="space-y-1">
                         <p className="text-sm text-gray-500">Province</p>

@@ -152,53 +152,70 @@ function Page() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="  grid-cols-1  hidden md:grid md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Employees
-                </p>
-                <p className="text-2xl font-bold">{employees.length || 0}</p>
-              </div>
-              <User className="h-8 w-8 text-primary" />
+          <CardContent className="pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Employees
+              </p>
+              <p className="text-2xl font-bold">{employees.length || 0}</p>
             </div>
+            <User className="h-10 w-10 text-primary" />
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Admins
-                </p>
-                <p className="text-2xl font-bold">
-                  {employees.filter((e) => e.role === "admin").length || 0}
-                </p>
-              </div>
-              <User className="h-8 w-8 text-red-500" />
+          <CardContent className="pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Admins
+              </p>
+              <p className="text-2xl font-bold">
+                {employees.filter((e) => e.role === "admin").length || 0}
+              </p>
             </div>
+            <User className="h-10 w-10 text-red-500" />
           </CardContent>
         </Card>
+
+        {/* Employees */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Employ
-                </p>
-                <p className="text-2xl font-bold">
-                  {employees.filter((e) => e.role === "employ").length || 0}
-                </p>
-              </div>
-              <User className="h-8 w-8 text-blue-500" />
+          <CardContent className="pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Employees
+              </p>
+              <p className="text-2xl font-bold">
+                {employees.filter((e) => e.role === "employ").length || 0}
+              </p>
             </div>
+            <User className="h-10 w-10 text-blue-500" />
           </CardContent>
         </Card>
       </div>
+      <div className="md:hidden bg-white shadow-md rounded-lg p-4 space-y-2">
+        <p className="text-sm text-gray-500">
+          Total Users:{" "}
+          <span className="font-semibold text-gray-800">
+            {employees.length}
+          </span>
+        </p>
+        <p className="text-sm text-gray-500">
+          Total Admins:{" "}
+          <span className="font-semibold text-gray-800">
+            {employees.filter((e) => e.role === "admin").length || 0}
+          </span>
+        </p>
+        <p className="text-sm text-gray-500">
+          Total Employees:{" "}
+          <span className="font-semibold text-gray-800">
+            {employees.filter((e) => e.role === "employ").length || 0}
+          </span>
+        </p>
+      </div>
 
-      <Card>
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>Employee List</CardTitle>
           <CardDescription>

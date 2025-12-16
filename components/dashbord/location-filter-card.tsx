@@ -55,7 +55,7 @@ function LocationFilterCard({
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const getFilteredPollingCenters = () => {
     const centers = filters.district
       ? pollingCenters[filters.district] || []
@@ -132,7 +132,7 @@ function LocationFilterCard({
   }
 
   return (
-    <Card className="fixed right-0  top-4 w-80   border border-gray-200 animate-in   z-50 mt-11">
+    <Card className="fixed right-0   top-1 w-80   border border-gray-200 animate-in   z-50  ">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -285,6 +285,7 @@ function LocationFilterCard({
                 </Select>
               </div>
             </div>
+
             <div>
               {isLoading ? (
                 <div className="flex items-center justify-center min-h-screen">

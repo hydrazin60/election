@@ -130,7 +130,7 @@ export default function Page() {
 
   const safeVoters = Array.isArray(voters) ? voters : [];
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 ">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           <Card className="h-full">
@@ -189,7 +189,7 @@ export default function Page() {
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 ">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   {!isLocationFilterActive && searchMode === "all" && (
@@ -210,7 +210,7 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="border rounded-lg overflow-hidden">
+                <div className="  rounded-lg overflow-hidden">
                   <VoterDataTable
                     voters={safeVoters}
                     isLoading={isLoading}
