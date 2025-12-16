@@ -1,4 +1,3 @@
-// app/employee-management/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -50,13 +49,12 @@ import {
 } from "lucide-react";
 import { fetchEmployList } from "@/axios/endpoint";
 import { EmployResponse } from "@/type/user.type";
-import { useRouter } from "next/navigation";
+import RegisterSheet from "@/components/global/register-seet";
 
 function Page() {
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-
+  const [open, setOpen] = useState(false);
   const {
     data: employResponse,
     isLoading,
@@ -117,7 +115,9 @@ function Page() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={() => router.push("/register")}>Add Employee</Button>
+          <Button onClick={() => setOpen(true)}>Add Employee</Button>
+
+          <RegisterSheet open={open} onOpenChange={setOpen} />
         </div>
       </div>
 

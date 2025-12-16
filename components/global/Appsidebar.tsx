@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Users, UserPlus, Search } from "lucide-react";
+import { Users, Search } from "lucide-react";
 import Link from "next/link";
 import { useAuthRedirectQuery } from "@/utils/isuserlogin";
 
@@ -43,7 +43,6 @@ const AppSidebar = () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-
       <SidebarContent className="pt-4">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -52,14 +51,6 @@ const AppSidebar = () => {
               <Link href={`/dashboard/${userId}`}> Search Voter</Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton>
-              <UserPlus className="mr-2 h-4 w-4" />
-              <Link href={"/register"}>Register Employ</Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           <SidebarMenuItem>
             <SidebarMenuButton>
               <Users className="mr-2 h-4 w-4" />

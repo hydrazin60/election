@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import Tabledata from "./Tabledata";
-import IndivusialVoterData from "./IndivusialVoterData";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -113,8 +112,6 @@ export default function VoterDataTable({
         expandedVoter={expandedVoter}
         onExpand={setExpandedVoter}
       />
-
-      <IndivusialVoterData voter={selectedVoter} />
 
       {searchMode === "all" && pagination && (
         <div className="flex justify-between items-center">

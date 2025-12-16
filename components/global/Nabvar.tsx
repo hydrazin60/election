@@ -16,7 +16,7 @@ import Image from "next/image";
 
 const Navbar = () => {
   return (
-    <nav className="w-full border-b bg-gray-50 relative h-16">
+    <nav className="w-full border-b bg-gray-50 sticky top-0 z-50 h-16">
       <div className="flex items-center h-full w-full">
         <div className="flex-shrink-0">
           <Link href="/" className="font-bold text-lg whitespace-nowrap pl-4">

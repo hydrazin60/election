@@ -1,9 +1,9 @@
 import { VoterResponse } from "@/type/voter.type";
 import axios from "axios";
-import { LocationFilters } from "@/components/dashbord/location-filter-card";
 
 import { EmployResponse } from "@/type/user.type";
 import { baseUrl } from "@/utils/baseUrl";
+import { LocationFilters } from "@/components/dashbord/location-filter-card";
 export const fetchVoterById = async (
   voterId: string
 ): Promise<VoterResponse> => {

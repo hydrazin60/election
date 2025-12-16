@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Select,
@@ -17,14 +16,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { ChevronsLeft, Filter, Loader2, X } from "lucide-react";
 import {
   districts,
   municipalities,
   pollingCenters,
   provinces,
-  wards,
 } from "@/data/static_data/location";
 
 interface LocationFilterCardProps {
@@ -43,357 +44,262 @@ export interface LocationFilters {
 
 function LocationFilterCard({
   onFilterChange,
-  onApplyFilters,
   isLoading = false,
 }: LocationFilterCardProps) {
-  const [selectedProvince, setSelectedProvince] = useState<string>("");
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
-  const [selectedMunicipality, setSelectedMunicipality] = useState<string>("");
-  const [selectedWard, setSelectedWard] = useState<string>("");
-  const [selectedPolling, setSelectedPolling] = useState<string>("");
-
-  // Helper function to get current filters
-  const getCurrentFilters = (): LocationFilters => ({
-    province: selectedProvince,
-    district: selectedDistrict,
-    municipality: selectedMunicipality,
-    wardNumber: selectedWard,
-    pollingCenter: selectedPolling,
+  const [filters, setFilters] = useState<LocationFilters>({
+    province: "",
+    district: "",
+    municipality: "",
+    wardNumber: "",
+    pollingCenter: "",
   });
 
-  // Handle province change
-  const handleProvinceChange = (value: string) => {
-    setSelectedProvince(value);
-    setSelectedDistrict("");
-    setSelectedMunicipality("");
-    setSelectedWard("");
-    setSelectedPolling("");
-
-    // Call onFilterChange with updated filters
-    if (onFilterChange) {
-      onFilterChange({
-        province: value,
-        district: "",
-        municipality: "",
-        wardNumber: "",
-        pollingCenter: "",
-      });
-    }
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const getFilteredPollingCenters = () => {
+    const centers = filters.district
+      ? pollingCenters[filters.district] || []
+      : [];
+    if (!searchTerm) return centers;
+    return centers.filter((center) =>
+      center.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   };
 
-  // Handle district change
-  const handleDistrictChange = (value: string) => {
-    setSelectedDistrict(value);
-    setSelectedMunicipality("");
-    setSelectedWard("");
-    setSelectedPolling("");
+  const updateFilter = (key: keyof LocationFilters, value: string) => {
+    const newFilters = { ...filters };
+
+    switch (key) {
+      case "province":
+        newFilters.district = "";
+        newFilters.municipality = "";
+        newFilters.wardNumber = "";
+        newFilters.pollingCenter = "";
+        break;
+      case "district":
+        newFilters.municipality = "";
+        newFilters.wardNumber = "";
+        newFilters.pollingCenter = "";
+        break;
+      case "municipality":
+        newFilters.wardNumber = "";
+        newFilters.pollingCenter = "";
+        break;
+      case "wardNumber":
+        newFilters.pollingCenter = "";
+        break;
+    }
+
+    newFilters[key] = value;
+    setFilters(newFilters);
+    setSearchTerm("");
 
     if (onFilterChange) {
-      onFilterChange({
-        province: selectedProvince,
-        district: value,
-        municipality: "",
-        wardNumber: "",
-        pollingCenter: "",
-      });
-    }
-  };
-
-  // Handle municipality change
-  const handleMunicipalityChange = (value: string) => {
-    setSelectedMunicipality(value);
-    setSelectedWard("");
-    setSelectedPolling("");
-
-    if (onFilterChange) {
-      onFilterChange({
-        province: selectedProvince,
-        district: selectedDistrict,
-        municipality: value,
-        wardNumber: "",
-        pollingCenter: "",
-      });
-    }
-  };
-
-  // Handle ward change
-  const handleWardChange = (value: string) => {
-    setSelectedWard(value);
-    setSelectedPolling("");
-
-    if (onFilterChange) {
-      onFilterChange({
-        province: selectedProvince,
-        district: selectedDistrict,
-        municipality: selectedMunicipality,
-        wardNumber: value,
-        pollingCenter: "",
-      });
-    }
-  };
-
-  // Handle polling center change
-  const handlePollingChange = (value: string) => {
-    setSelectedPolling(value);
-
-    if (onFilterChange) {
-      onFilterChange({
-        province: selectedProvince,
-        district: selectedDistrict,
-        municipality: selectedMunicipality,
-        wardNumber: selectedWard,
-        pollingCenter: value,
-      });
-    }
-  };
-
-  const handleApplyFilters = () => {
-    if (onApplyFilters) {
-      onApplyFilters(getCurrentFilters());
+      onFilterChange(newFilters);
     }
   };
 
   const handleReset = () => {
-    setSelectedProvince("");
-    setSelectedDistrict("");
-    setSelectedMunicipality("");
-    setSelectedWard("");
-    setSelectedPolling("");
-
+    const resetFilters = {
+      province: "",
+      district: "",
+      municipality: "",
+      wardNumber: "",
+      pollingCenter: "",
+    };
+    setFilters(resetFilters);
+    setSearchTerm("");
     if (onFilterChange) {
-      onFilterChange({
-        province: "",
-        district: "",
-        municipality: "",
-        wardNumber: "",
-        pollingCenter: "",
-      });
+      onFilterChange(resetFilters);
     }
   };
 
-  const hasActiveFilters =
-    selectedProvince ||
-    selectedDistrict ||
-    selectedMunicipality ||
-    selectedWard ||
-    selectedPolling;
+  const hasActiveFilters = Object.values(filters).some(Boolean);
 
-  const isApplyDisabled = !hasActiveFilters || isLoading;
+  if (isCollapsed) {
+    return (
+      <div className="fixed right-4 top-17 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-12 w-12 rounded-full shadow-lg hover:bg-blue-600 bg-blue-700 text-white"
+          onClick={() => setIsCollapsed(false)}
+        >
+          <Filter className="h-5 w-5" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <Card className="h-full">
+    <Card className="fixed right-0  top-4 w-80   border border-gray-200 animate-in   z-50 mt-11">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-xl font-bold text-gray-800">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 border"
+              onClick={() => setIsCollapsed(true)}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <CardTitle className="text-lg font-semibold">
               Location Filters
             </CardTitle>
           </div>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleReset}
-              className="h-8 px-2 text-red-600 border border-red-400"
-              disabled={isLoading}
-            >
-              <X className="h-4 w-4 text-red-600 mr-1" />
-              Clear
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="h-8 text-muted-foreground hover:text-destructive"
+                disabled={isLoading}
+              >
+                <X className="h-4 w-4 text-red-700 " />
+              </Button>
+            )}
+          </div>
         </div>
-        <CardDescription className="text-gray-500 text-sm">
-          Narrow down voters by location hierarchy
-        </CardDescription>
+        <CardDescription>Filter voters by location hierarchy</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Province</label>
-          <Select
-            value={selectedProvince}
-            onValueChange={handleProvinceChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Province" />
-            </SelectTrigger>
-            <SelectContent>
-              {provinces.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <Separator />
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">District</label>
-          <Select
-            value={selectedDistrict}
-            onValueChange={handleDistrictChange}
-            disabled={!selectedProvince || isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select District" />
-            </SelectTrigger>
-            <SelectContent>
-              {(selectedProvince ? districts[selectedProvince] || [] : []).map(
-                (d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                )
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+      <ScrollArea className="h-[calc(100vh-220px)]">
+        <CardContent className="pt-4 space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="province">Province</Label>
+              <Select
+                value={filters.province}
+                onValueChange={(value) => updateFilter("province", value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="province" className="w-full">
+                  <SelectValue placeholder="Select province" />
+                </SelectTrigger>
+                <SelectContent>
+                  {provinces.map((province) => (
+                    <SelectItem key={province} value={province}>
+                      {province}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Municipality
-          </label>
-          <Select
-            value={selectedMunicipality}
-            onValueChange={handleMunicipalityChange}
-            disabled={!selectedDistrict || isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Municipality" />
-            </SelectTrigger>
-            <SelectContent>
-              {(selectedDistrict
-                ? municipalities[selectedDistrict] || []
-                : []
-              ).map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="district">District</Label>
+              <Select
+                value={filters.district}
+                onValueChange={(value) => updateFilter("district", value)}
+                disabled={!filters.province || isLoading}
+              >
+                <SelectTrigger id="district" className="w-full">
+                  <SelectValue placeholder="Select district" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(filters.province
+                    ? districts[filters.province] || []
+                    : []
+                  ).map((district) => (
+                    <SelectItem key={district} value={district}>
+                      {district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Ward Number
-          </label>
-          <Select
-            value={selectedWard}
-            onValueChange={handleWardChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Ward" />
-            </SelectTrigger>
-            <SelectContent>
-              {wards.map((w) => (
-                <SelectItem key={w} value={w}>
-                  {w}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="municipality">Municipality</Label>
+              <Select
+                value={filters.municipality}
+                onValueChange={(value) => updateFilter("municipality", value)}
+                disabled={!filters.district || isLoading}
+              >
+                <SelectTrigger id="municipality" className="w-full">
+                  <SelectValue placeholder="Select municipality" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(filters.district
+                    ? municipalities[filters.district] || []
+                    : []
+                  ).map((municipality) => (
+                    <SelectItem key={municipality} value={municipality}>
+                      {municipality}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Polling Center
-          </label>
-          <Select
-            value={selectedPolling}
-            onValueChange={handlePollingChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Polling Center" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {/* Show polling centers only if a district is selected */}
-              {(selectedDistrict
-                ? pollingCenters[selectedDistrict] || []
-                : []
-              ).map((center) => (
-                <SelectItem key={center} value={center}>
-                  {center}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="ward">Ward Number</Label>
+              <Input
+                id="ward"
+                type="number"
+                min="1"
+                max="32"
+                placeholder="Enter ward number (1-32)"
+                value={filters.wardNumber}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (
+                    value === "" ||
+                    (Number(value) >= 1 && Number(value) <= 32)
+                  ) {
+                    updateFilter("wardNumber", value);
+                  }
+                }}
+                disabled={isLoading}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter a number between 1 and 32
+              </p>
+            </div>
 
-        {hasActiveFilters && (
-          <div className="pt-4 border-t">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Active Filters
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {selectedProvince && (
-                <Badge variant="secondary" className="px-3 py-1">
-                  Province: {selectedProvince}
-                </Badge>
-              )}
-              {selectedDistrict && (
-                <Badge variant="secondary" className="px-3 py-1">
-                  District: {selectedDistrict}
-                </Badge>
-              )}
-              {selectedMunicipality && (
-                <Badge variant="secondary" className="px-3 py-1">
-                  Municipality: {selectedMunicipality}
-                </Badge>
-              )}
-              {selectedWard && (
-                <Badge variant="secondary" className="px-3 py-1">
-                  Ward: {selectedWard}
-                </Badge>
-              )}
-              {selectedPolling && (
-                <Badge variant="secondary" className="px-3 py-1">
-                  Polling: {selectedPolling}
-                </Badge>
+            <div className="space-y-2">
+              <Label htmlFor="polling">Polling Center</Label>
+              <div className="space-y-2">
+                <Select
+                  value={filters.pollingCenter}
+                  onValueChange={(value) =>
+                    updateFilter("pollingCenter", value)
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="polling" className="w-full">
+                    <SelectValue placeholder="Select polling center" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {getFilteredPollingCenters().map((center) => (
+                      <SelectItem key={center} value={center}>
+                        {center}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              {isLoading ? (
+                <div className="flex items-center justify-center min-h-screen">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                    <p className="mt-2">Loading employee data...</p>
+                  </div>
+                </div>
+              ) : (
+                ""
               )}
             </div>
           </div>
-        )}
-      </CardContent>
-
-      <CardFooter>
-        <Button
-          className="w-full bg-blue-600 hover:bg-blue-700 py-3"
-          onClick={handleApplyFilters}
-          disabled={isApplyDisabled}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Applying...
-            </div>
-          ) : (
-            "Apply Filters"
-          )}
-        </Button>
-      </CardFooter>
+        </CardContent>
+      </ScrollArea>
     </Card>
   );
 }
