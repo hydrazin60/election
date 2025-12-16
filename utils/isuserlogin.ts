@@ -7,7 +7,6 @@ import { baseUrl } from "./baseUrl";
 
 export const useAuthRedirectQuery = () => {
   const router = useRouter();
-
   const query = useQuery({
     queryKey: ["authMe"],
     queryFn: async () => {
@@ -16,6 +15,10 @@ export const useAuthRedirectQuery = () => {
       });
       return res.data;
     },
+
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60,
+
     retry: false,
     refetchOnWindowFocus: false,
   });
