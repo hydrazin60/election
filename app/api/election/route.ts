@@ -5,13 +5,6 @@ import LocationSchema from "@/models/location";
 import { sendError } from "@/utils/NextResponse";
 import { NextResponse } from "next/server";
 
-interface LocationQuery {
-  province: string;
-  district: string;
-  municipality: string;
-  wardNumber: number;
-  pollingCenter: string;
-}
 export async function POST(req: Request) {
   try {
     await connectDB();
@@ -44,14 +37,6 @@ export async function POST(req: Request) {
     }
 
     const skip = (page - 1) * limit;
-
-    const locationQuery: LocationQuery = {
-      province: province.trim(),
-      district: district.trim(),
-      municipality: municipality.trim(),
-      wardNumber: parseInt(wardNumber),
-      pollingCenter: pollingCenter.trim(),
-    };
 
     const matchedLocations = await LocationSchema.find({
       province: { $regex: `^${province.trim()}$`, $options: "i" },

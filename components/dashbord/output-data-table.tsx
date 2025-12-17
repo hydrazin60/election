@@ -16,7 +16,7 @@ interface VoterDataTableProps {
   voters: Voter[];
   isLoading: boolean;
   isError: boolean;
-  searchMode: "all" | "single";
+  searchMode: "all" | "single" | "fullName";
   page: number;
   limit: 10 | 50 | 100 | "all";
   onPageChange: (page: number) => void;
@@ -34,7 +34,6 @@ interface VoterDataTableProps {
 export default function VoterDataTable({
   voters,
   isLoading,
-  isError,
   searchMode,
   page,
   limit,

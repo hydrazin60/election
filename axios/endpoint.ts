@@ -98,3 +98,65 @@ export const fetchEmployList = async (): Promise<EmployResponse> => {
     throw new Error("Error fetching employee list");
   }
 };
+
+export const fetchVoterByFullName = async (
+  fullName: string
+): Promise<VoterResponse> => {
+  try {
+    if (!fullName || fullName.trim() === "") {
+      return {
+        success: false,
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 0,
+          total: 0,
+          hasMore: false,
+          totalPages: 0,
+        },
+      };
+    }
+
+    const encodedName = encodeURIComponent(fullName.trim());
+
+    const { data } = await axios.get(`/api/election/search/${encodedName}`);
+
+    if (data.success) {
+      // Normalize response: always return an array of voters
+      if (Array.isArray(data.data)) {
+        return data;
+      } else if (data.data && typeof data.data === "object") {
+        return {
+          ...data,
+          data: [data.data],
+        };
+      }
+    }
+
+    // Fallback if data shape is unknown
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit: 0,
+        total: 0,
+        hasMore: false,
+        totalPages: 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching voter by full name:", error);
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit: 0,
+        total: 0,
+        hasMore: false,
+        totalPages: 0,
+      },
+    };
+  }
+};
