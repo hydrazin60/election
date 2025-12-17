@@ -118,7 +118,7 @@ function LocationFilterCard({
 
   if (isCollapsed) {
     return (
-      <div className="fixed right-4 top-17 z-50">
+      <div className="fixed right-4 bottom-10 z-50">
         <Button
           variant="outline"
           size="icon"
@@ -132,7 +132,7 @@ function LocationFilterCard({
   }
 
   return (
-    <Card className="fixed right-0   top-1 w-80   border border-gray-200 animate-in   z-50  ">
+    <Card className="fixed right-0 top-1 w-80 border border-gray-200 animate-in  z-50     ">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -300,6 +300,14 @@ function LocationFilterCard({
             </div>
           </div>
         </CardContent>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 border items-center "
+          onClick={() => setIsCollapsed(true)}
+        >
+          <ChevronsLeft className="h-6 w-6 animate-in slide-in-from-left repeat-infinite duration-1000 alternate" />
+        </Button>
       </ScrollArea>
     </Card>
   );

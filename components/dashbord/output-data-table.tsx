@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Voter } from "@/type/voter.type";
+import { Loader2 } from "lucide-react";
 
 interface VoterDataTableProps {
   voters: Voter[];
@@ -125,13 +126,20 @@ export default function VoterDataTable({
           <span className="text-sm">
             Page {pagination?.page ?? 1} of {totalPages}
           </span>
-          <Button
-            disabled={!pagination?.hasMore}
-            onClick={() => onPageChange(page + 1)}
-            variant="outline"
-          >
-            Next
-          </Button>
+          {isLoading ? (
+            <Button disabled className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading...</span>
+            </Button>
+          ) : (
+            <Button
+              disabled={!pagination?.hasMore}
+              onClick={() => onPageChange(page + 1)}
+              variant="outline"
+            >
+              Next
+            </Button>
+          )}
         </div>
       )}
     </div>
