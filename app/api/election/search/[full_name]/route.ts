@@ -7,11 +7,11 @@ import "@/models/location";
 
 export async function GET(
   req: Request,
-  context: { params: { full_name: string } }
+  context: { params: Promise<{ full_name: string }> }
 ) {
   try {
-    const params = await context.params;
-    const { full_name } = params;
+    const { full_name } = await context.params;
+
     await connectDB();
     const userData = await getAuthenticatedStaff();
     if (!userData) return sendError("Unauthorized", 401);
