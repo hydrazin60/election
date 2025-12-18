@@ -39,7 +39,6 @@ export default function Page() {
   });
   const [isLocationFilterActive, setIsLocationFilterActive] = useState(false);
 
-  // React Query hooks
   const singleVoterQuery = useQuery({
     queryKey: ["voter", queryInput],
     queryFn: () => fetchVoterById(queryInput),
@@ -68,17 +67,14 @@ export default function Page() {
     retry: 1,
   });
 
-  // Handle search button or Enter key
   const handleSearch = () => {
     const query = queryInput.trim();
     if (!query) return;
 
     if (/^\d+$/.test(query)) {
-      // Numeric input → voter ID
       setSearchMode("single");
       singleVoterQuery.refetch();
     } else {
-      // Text input → full name search
       setSearchMode("fullName");
       fullNameQuery.refetch();
     }

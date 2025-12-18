@@ -4,6 +4,11 @@ import VoterSchema from "@/models/VoterSchema";
 import { sendError } from "@/utils/NextResponse";
 import { NextResponse } from "next/server";
 import "@/models/location";
+import { englishToNepali } from "@/utils/englishToNepali";
+
+function isEnglish(text: string) {
+  return /^[a-zA-Z\s]+$/.test(text);
+}
 
 export async function GET(
   req: Request,
@@ -11,56 +16,77 @@ export async function GET(
 ) {
   try {
     const { full_name } = await context.params;
+    if (!full_name) return sendError("Full name required", 400);
 
     await connectDB();
-    const userData = await getAuthenticatedStaff();
-    if (!userData) return sendError("Unauthorized", 401);
-    if (!full_name) return sendError("full name is required", 400);
+    const user = await getAuthenticatedStaff();
+    if (!user) return sendError("Unauthorized", 401);
 
-    const decodedName = decodeURIComponent(full_name.trim());
-    const nameParts = decodedName.split(/\s+/);
+    /** 🔹 Pagination params */
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+    const limit = Math.min(Number(searchParams.get("limit")) || 10, 50);
+    const skip = (page - 1) * limit;
 
-    if (nameParts.length === 0) return sendError("Invalid full name", 400);
+    let searchText = decodeURIComponent(full_name.trim());
 
-    // Step 1: Fetch all voters containing at least one part
-    const regexes = nameParts.map((part) => new RegExp(part, "i"));
+    /** 🔹 English → Nepali */
+    if (isEnglish(searchText)) {
+      searchText = englishToNepali(searchText);
+    }
+
+    const parts = searchText.split(/\s+/);
+
+    /** 🔹 Broad DB match */
     const voters = await VoterSchema.find({
-      $or: regexes.map((r) => ({ full_name: r })),
+      $or: parts.map((p: string) => ({
+        full_name: { $regex: p, $options: "i" },
+      })),
     }).populate("location");
 
-    if (!voters || voters.length === 0)
-      return sendError("Voter not found", 404);
+    if (!voters.length) return sendError("Voter not found", 404);
 
-    // Step 2: Score each voter giving priority to first words
-    const scored = voters.map((voter) => {
-      const voterNameParts = voter.full_name.split(/\s+/);
+    /** 🔹 Scoring (relevance ranking) */
+    const scored = voters.map((v) => {
       let score = 0;
 
-      // Give higher weight to the first word, lower to next
-      for (let i = 0; i < nameParts.length; i++) {
-        const inputPart = nameParts[i];
-        const weight = nameParts.length - i; // first word highest weight
-        if (
-          voterNameParts[i] &&
-          new RegExp(inputPart, "i").test(voterNameParts[i])
-        ) {
-          score += weight;
-        }
-      }
+      if (v.full_name === searchText) score += 100;
+      if (v.full_name.startsWith(searchText)) score += 60;
 
-      return { voter, score };
+      const vp = v.full_name.split(/\s+/);
+
+      parts.forEach((p, i) => {
+        if (vp[i] === p) score += 30;
+        else if (vp.includes(p)) score += 15;
+      });
+
+      return { voter: v, score };
     });
 
-    // Step 3: Sort by score descending
+    /** 🔹 Sort by best match */
     scored.sort((a, b) => b.score - a.score);
 
-    // Step 4: Take only the **top match**
-    const result = scored.length > 0 ? [scored[0].voter] : [];
+    /** 🔹 Pagination AFTER ranking */
+    const total = scored.length;
+    const paginated = scored.slice(skip, skip + limit).map((s) => s.voter);
 
-    return NextResponse.json({ success: true, data: result }, { status: 200 });
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Internal Server Error";
-    return sendError(message, 500);
+    return NextResponse.json(
+      {
+        success: true,
+        translated: searchText,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNext: skip + limit < total,
+          hasPrev: page > 1,
+        },
+        data: paginated,
+      },
+      { status: 200 }
+    );
+  } catch (e) {
+    return sendError(e instanceof Error ? e.message : "Server Error", 500);
   }
 }
