@@ -100,7 +100,9 @@ export const fetchEmployList = async (): Promise<EmployResponse> => {
 };
 
 export const fetchVoterByFullName = async (
-  fullName: string
+  fullName: string,
+  page?: number,
+  limit?: number
 ): Promise<VoterResponse> => {
   try {
     if (!fullName || fullName.trim() === "") {
@@ -119,10 +121,17 @@ export const fetchVoterByFullName = async (
 
     const encodedName = encodeURIComponent(fullName.trim());
 
-    const { data } = await axios.get(`/api/election/search/${encodedName}`);
+    const params = new URLSearchParams();
+    params.append("name", encodedName);
+
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+
+    const { data } = await axios.get(
+      `/api/election/search/${encodedName}?${params.toString()}`
+    );
 
     if (data.success) {
-      // Normalize response: always return an array of voters
       if (Array.isArray(data.data)) {
         return data;
       } else if (data.data && typeof data.data === "object") {
@@ -133,7 +142,21 @@ export const fetchVoterByFullName = async (
       }
     }
 
-    // Fallback if data shape is unknown
+    if (data.success && data.data && !data.pagination) {
+      const voters = Array.isArray(data.data) ? data.data : [data.data];
+      return {
+        ...data,
+        data: voters,
+        pagination: {
+          page: page || 1,
+          limit: limit || voters.length,
+          total: voters.length,
+          hasMore: false,
+          totalPages: 1,
+        },
+      };
+    }
+
     return {
       success: false,
       data: [],

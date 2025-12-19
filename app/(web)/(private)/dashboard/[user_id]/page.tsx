@@ -38,6 +38,7 @@ export default function Page() {
     pollingCenter: "",
   });
   const [isLocationFilterActive, setIsLocationFilterActive] = useState(false);
+  const [currentFullNameQuery, setCurrentFullNameQuery] = useState("");
 
   const singleVoterQuery = useQuery({
     queryKey: ["voter", queryInput],
@@ -47,9 +48,16 @@ export default function Page() {
   });
 
   const fullNameQuery = useQuery({
-    queryKey: ["voter-fullname", queryInput],
-    queryFn: () => fetchVoterByFullName(queryInput),
-    enabled: searchMode === "fullName",
+    queryKey: ["voter-fullname", currentFullNameQuery, page, limit],
+    queryFn: () =>
+      fetchVoterByFullName(
+        currentFullNameQuery,
+        page,
+        limit === "all" ? 1000 : limit
+      ),
+    enabled: searchMode === "fullName" && !!currentFullNameQuery,
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
   });
 
@@ -76,15 +84,16 @@ export default function Page() {
       singleVoterQuery.refetch();
     } else {
       setSearchMode("fullName");
-      fullNameQuery.refetch();
+      setCurrentFullNameQuery(query);
+      setPage(1); // Reset to first page for new search
     }
 
-    setPage(1);
     setIsLocationFilterActive(false);
   };
 
   const handleReset = () => {
     setQueryInput("");
+    setCurrentFullNameQuery("");
     setSearchMode("all");
     setPage(1);
     setIsLocationFilterActive(false);
@@ -119,6 +128,7 @@ export default function Page() {
     setSearchMode("all");
     setPage(1);
     setQueryInput("");
+    setCurrentFullNameQuery("");
     setIsLocationFilterActive(true);
   };
 
@@ -138,7 +148,8 @@ export default function Page() {
     voters = fullNameQuery.data?.data || [];
     isLoading = fullNameQuery.isLoading;
     isError = fullNameQuery.isError;
-    totalVoters = voters.length;
+    totalVoters = fullNameQuery.data?.pagination?.total || voters.length;
+    pagination = fullNameQuery.data?.pagination;
   } else if (isLocationFilterActive) {
     voters = locationVotersQuery.data?.data || [];
     isLoading = locationVotersQuery.isLoading;
@@ -207,25 +218,6 @@ export default function Page() {
 
             <CardContent className="space-y-3">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  {!isLocationFilterActive && searchMode === "all" && (
-                    <span className="text-sm text-gray-500">
-                      {totalVoters.toLocaleString()} total voters
-                    </span>
-                  )}
-                  {isLocationFilterActive && (
-                    <span className="text-sm text-gray-500">
-                      {totalVoters.toLocaleString()} voters found with location
-                      filters
-                    </span>
-                  )}
-                  {(searchMode === "single" || searchMode === "fullName") && (
-                    <span className="text-sm text-gray-500">
-                      {totalVoters} voter{totalVoters > 1 ? "s" : ""} found
-                    </span>
-                  )}
-                </div>
-
                 <div className="rounded-lg overflow-hidden">
                   <VoterDataTable
                     voters={safeVoters}
