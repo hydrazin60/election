@@ -52,50 +52,62 @@ const MobileView: React.FC<MobileViewProps> = ({
       </Card>
     ) : (
       voters.map((voter) => (
-        <Card key={voter._id}>
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold">{voter.full_name}</h3>
-                  <p className="text-sm text-gray-500">ID: {voter.voter_id}</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    onExpand(
-                      expandedVoter === voter.voter_id ? null : voter.voter_id
-                    )
-                  }
-                >
-                  {expandedVoter === voter.voter_id ? (
-                    <>
-                      <ChevronUp className="h-4 w-4 mr-1" />
-                      Hide
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-1" />
-                      Explore
-                    </>
-                  )}
-                </Button>
+        <Card key={voter._id} className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-base">{voter.full_name}</h3>
+                <p className="text-xs text-muted-foreground">
+                  ID: {voter.voter_id}
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">SN</p>
-                  <p className="font-medium">{voter.serial_no}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">Age</p>
-                  <p className="font-medium">{voter.age}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium">{voter.gender}</p>
-                </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  onExpand(
+                    expandedVoter === voter.voter_id ? null : voter.voter_id
+                  )
+                }
+              >
+                {expandedVoter === voter.voter_id ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Explore
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* 🔹 Info Grid */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-xs text-muted-foreground">SN</p>
+                <p className="font-medium">{voter.serial_no}</p>
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Age</p>
+                <p className="font-medium">{voter.age}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Gender</p>
+                <p className="font-medium capitalize">{voter.gender}</p>
+              </div>
+            </div>
+
+            {/* 🔹 Divider */}
+            <div className="border-t pt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span>
+                {voter.location.district}, {voter.location.municipality} – Ward{" "}
+                {voter.location.wardNumber}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -108,7 +120,7 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
   const expandedVoterData = expandedVoter
     ? voters.find((voter) => voter.voter_id === expandedVoter)
     : null;
-
+  console.log("voterrrrrrr", voters[0].location);
   return (
     <>
       <div className="hidden md:block overflow-y-auto max-h-[500px] border rounded-md">
@@ -121,6 +133,7 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
               <TableHead>Full Name</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Gender</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Explore</TableHead>
             </TableRow>
           </TableHeader>
@@ -140,6 +153,12 @@ function Tabledata({ voters, expandedVoter, onExpand }: Props) {
                   <TableCell>{voter.full_name}</TableCell>
                   <TableCell>{voter.age}</TableCell>
                   <TableCell>{voter.gender}</TableCell>
+                  <TableCell>
+                    <p className="text-xs">
+                      {voter.location.district}, {voter.location.municipality} –
+                      Ward {voter.location.wardNumber}
+                    </p>
+                  </TableCell>
                   <TableCell>
                     <Button
                       size="sm"

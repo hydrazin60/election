@@ -162,10 +162,10 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50 ">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
         <div className="lg:col-span-3">
           <Card className="h-full">
-            <CardHeader className="flex justify-between items-center flex-wrap gap-4">
+            <CardHeader className="flex justify-between items-center flex-wrap gap-4 ">
               <div>
                 <CardTitle className="text-xl font-bold text-gray-800">
                   Voter Management Dashboard

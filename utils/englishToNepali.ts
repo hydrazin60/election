@@ -78,6 +78,8 @@ const commonNames: Record<string, string> = Object.fromEntries(
     Summer: "सम्मर",
     ramri: "राम्री",
 
+    Tara: "तारा",
+
     // *** First/Middle Names ***
     bahadur: "बहादुर",
     ganga: "गंगा",
@@ -134,6 +136,7 @@ const commonNames: Record<string, string> = Object.fromEntries(
     bhujel: "भुजेल",
     bisht: "बिष्ट",
     biswakarma: "बिश्वकर्मा",
+    Pariyar: "परियार",
     katwal: "कटुवाल",
     pau: "पौ",
     raut: "राउत",

@@ -46,27 +46,28 @@ export async function GET(
 
     if (!voters.length) return sendError("Voter not found", 404);
 
-    /** 🔹 Scoring (relevance ranking) */
     const scored = voters.map((v) => {
       let score = 0;
+      const name = v.full_name.trim();
+      const vp = name.split(/\s+/);
 
-      if (v.full_name === searchText) score += 100;
-      if (v.full_name.startsWith(searchText)) score += 60;
+      if (name === searchText) score += 1000;
 
-      const vp = v.full_name.split(/\s+/);
+      if (name.startsWith(searchText)) score += 600;
 
       parts.forEach((p, i) => {
-        if (vp[i] === p) score += 30;
-        else if (vp.includes(p)) score += 15;
+        if (vp[i] === p) score += 200;
+        else if (vp.includes(p)) score += 100;
       });
+
+      const lengthDiff = Math.abs(name.length - searchText.length);
+      score += Math.max(0, 50 - lengthDiff);
 
       return { voter: v, score };
     });
 
-    /** 🔹 Sort by best match */
     scored.sort((a, b) => b.score - a.score);
 
-    /** 🔹 Pagination AFTER ranking */
     const total = scored.length;
     const paginated = scored.slice(skip, skip + limit).map((s) => s.voter);
 
